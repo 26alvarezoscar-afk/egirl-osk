@@ -1,16 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="g" cx="30%" cy="15%" r="80%">
-      <stop offset="0" stop-color="#2a6a4f" stop-opacity="0.9"/>
-      <stop offset="0.55" stop-color="#0b0f0d" stop-opacity="1"/>
-      <stop offset="1" stop-color="#0b0f0d" stop-opacity="1"/>
+    <radialGradient id="bg" cx="30%" cy="20%" r="80%">
+      <stop offset="0%" stop-color="#1a1f1c"/>
+      <stop offset="100%" stop-color="#0b0f0d"/>
     </radialGradient>
   </defs>
-  <rect width="512" height="512" rx="120" fill="url(#g)"/>
-  <rect x="36" y="36" width="440" height="440" rx="105" fill="none" stroke="#c7a44b" stroke-opacity="0.45" stroke-width="10"/>
-  <text x="256" y="235" text-anchor="middle" font-size="86" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" fill="#e7e4d8">E-Girl</text>
-  <text x="256" y="315" text-anchor="middle" font-size="96" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" fill="#c7a44b">OSK</text>
-  <circle cx="256" cy="375" r="10" fill="#2a6a4f"/>
-  <circle cx="292" cy="375" r="10" fill="#2a6a4f"/>
-  <circle cx="220" cy="375" r="10" fill="#2a6a4f"/>
+
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+
+  <text
+    x="256"
+    y="300"
+    text-anchor="middle"
+    font-size="180"
+    font-family="system-ui, -apple-system, BlinkMacSystemFont, sans-serif"
+    fill="#e7e4d8"
+    font-weight="700"
+    letter-spacing="2"
+  >
+    C
+  </text>
 </svg>
