@@ -1,18 +1,15 @@
 {
-  "name": "E-Girl OSK Consistency Chart",
-  "short_name": "E-Girl OSK",
-  "description": "Habit consistency tracker (forever timeline) by E-Girl OSK.",
-  "start_url": "./",
-  "scope": "./",
+  "name": "Commitment Consistency Chart",
+  "short_name": "CCC",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#0b0f0d",
   "theme_color": "#0b0f0d",
   "icons": [
     {
       "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "sizes": "512x512",
+      "type": "image/svg+xml"
     }
   ]
 }
