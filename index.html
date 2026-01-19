@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-  <title>Commitment Consistency Chart</title>
+  <title>CCC</title>
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.webmanifest" />
@@ -20,50 +20,46 @@
   <style>
     :root{
       --bg: #0b0f0d;
-      --card: #111814;
-      --card2: #0f1512;
+      --card: rgba(17,24,20,0.72);
+      --card2: rgba(15,21,18,0.75);
       --text: #e7e4d8;
       --muted: #b9b29a;
-      --gold: #c7a44b;
+      --premium: #9aa6a0; /* premium accent (no gold) */
       --green: #2a6a4f;
-      --line: rgba(199,164,75,0.25);
+      --line: rgba(154,166,160,0.18);
       --shadow: 0 10px 30px rgba(0,0,0,0.45);
       --radius: 16px;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     }
 
     html, body{ height: 100%; }
-
     body{
       margin:0;
-      min-height: 100vh;
+      min-height:100vh;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       background:
         radial-gradient(1200px 600px at 10% 0%, rgba(42,106,79,0.25), transparent 55%),
-        radial-gradient(900px 500px at 90% 10%, rgba(199,164,75,0.18), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(154,166,160,0.16), transparent 60%),
         var(--bg);
       color: var(--text);
     }
 
-    .wrap{ max-width: 1200px; margin: 28px auto; padding: 0 16px 40px; }
-
+    .wrap{ max-width: 1200px; margin: 18px auto; padding: 0 14px 26px; }
     .top{
-      display:flex; gap:16px; align-items:flex-end; justify-content:space-between; flex-wrap: wrap;
+      display:flex; gap:14px; align-items:flex-end; justify-content:space-between; flex-wrap: wrap;
       margin-bottom: 12px;
     }
-
-    h1{ margin:0; font-weight: 750; letter-spacing: 0.3px; }
-    .sub{ margin:6px 0 0; color: var(--muted); font-family: var(--mono); font-size: 12px; display:none; }
-
+    h1{ margin:0; font-weight: 800; letter-spacing: 0.4px; }
     .card{
       background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
       border: 1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: 16px;
+      padding: 14px;
+      overflow: hidden; /* prevents any accidental sideways */
     }
 
-    .grid{ display:grid; grid-template-columns: 1.25fr 0.75fr; gap: 16px; }
+    .grid{ display:grid; grid-template-columns: 1.25fr 0.75fr; gap: 14px; }
     @media (max-width: 900px){ .grid{ grid-template-columns: 1fr; } }
 
     .row{ display:flex; gap:10px; flex-wrap: wrap; align-items:center; }
@@ -75,110 +71,129 @@
       border-radius: 12px;
       padding: 10px 12px;
       outline: none;
+      max-width: 100%;
     }
-    input[type="text"]{ min-width: 240px; flex: 1; }
+    input[type="text"]{ min-width: 200px; flex: 1; }
 
     button{
-      background: linear-gradient(180deg, rgba(199,164,75,0.22), rgba(199,164,75,0.10));
+      background: linear-gradient(180deg, rgba(154,166,160,0.18), rgba(154,166,160,0.08));
       border: 1px solid var(--line);
       color: var(--text);
       border-radius: 12px;
       padding: 10px 12px;
       cursor:pointer;
-      font-weight: 650;
+      font-weight: 700;
+      white-space: nowrap;
     }
-    button:hover{ border-color: rgba(199,164,75,0.55); }
+    button:hover{ border-color: rgba(154,166,160,0.40); }
+    button:disabled{ opacity: 0.55; cursor: not-allowed; }
 
     .tiny{ color: var(--muted); font-size: 12px; }
 
+    /* NO sideways scroll: the grid uses 7 columns on mobile, and a capped number on desktop */
     .tableWrap{
-      overflow:auto;
+      width: 100%;
       border-radius: 12px;
       border: 1px solid var(--line);
+      overflow: hidden;
     }
-
     table{
       width:100%;
       border-collapse: collapse;
-      min-width: 860px;
       background: rgba(15,21,18,0.55);
+      table-layout: fixed; /* critical: prevents width explosion */
     }
 
     th, td{
-      padding: 10px 12px;
-      border-bottom: 1px solid rgba(199,164,75,0.12);
-      text-align: left;
-      white-space: nowrap;
+      padding: 10px 8px;
+      border-bottom: 1px solid rgba(154,166,160,0.10);
+      text-align: center;
       vertical-align: middle;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     th{
-      position: sticky; top:0;
       background: rgba(17,24,20,0.92);
-      border-bottom: 1px solid rgba(199,164,75,0.25);
+      border-bottom: 1px solid rgba(154,166,160,0.22);
       font-family: var(--mono);
       font-size: 12px;
       color: var(--muted);
-      z-index: 2;
     }
 
-    .habitCell{ display:flex; gap:10px; align-items:center; justify-content:space-between; min-width: 260px; }
+    th.habitCol, td.habitCol{
+      text-align: left;
+      width: 34%;
+    }
+    th.pctCol, td.pctCol{
+      width: 10%;
+      font-family: var(--mono);
+    }
+
+    .habitCell{
+      display:flex; gap:10px; align-items:center; justify-content:space-between;
+    }
+
     .remove{
       background: transparent;
-      border: 1px solid rgba(199,164,75,0.25);
+      border: 1px solid rgba(154,166,160,0.20);
       color: var(--muted);
       padding: 6px 10px;
       border-radius: 10px;
-      font-weight: 650;
+      font-weight: 750;
     }
-    .remove:hover{ color: var(--text); border-color: rgba(199,164,75,0.55); }
+    .remove:hover{ color: var(--text); border-color: rgba(154,166,160,0.45); }
 
-    .chk{ width: 20px; height: 20px; accent-color: var(--gold); cursor:pointer; }
+    .chk{ width: 20px; height: 20px; accent-color: var(--premium); cursor:pointer; }
 
     .stats{ display:grid; gap: 12px; }
-
     .pill{
       display:flex; align-items:center; justify-content:space-between; gap: 10px;
-      padding: 12px 12px; border-radius: 14px;
-      border: 1px solid rgba(199,164,75,0.18);
+      padding: 12px; border-radius: 14px;
+      border: 1px solid rgba(154,166,160,0.16);
       background: rgba(17,24,20,0.55);
     }
-    .pill b{ font-family: var(--mono); letter-spacing: 0.3px; }
+    .pill b{ font-family: var(--mono); letter-spacing: 0.3px; font-size: 18px; }
 
-    canvas{
-      display:block; width:100%;
-      background: rgba(15,21,18,0.35);
-      border: 1px solid rgba(199,164,75,0.18);
+    .chartBox{
+      border: 1px solid rgba(154,166,160,0.16);
       border-radius: 14px;
+      background: rgba(15,21,18,0.35);
       padding: 10px;
+      overflow: hidden;
     }
+
+    /* LOCK chart sizes (prevents “screen gets bigger”) */
+    .chartFixed{ height: 220px; }
+    canvas{ width:100% !important; height:100% !important; display:block; }
 
     .controls{
       display:flex; gap:10px; flex-wrap: wrap; align-items:center; justify-content:space-between;
-      margin: 10px 0 14px;
+      margin: 8px 0 12px;
     }
 
     .mutedBox{
-      border: 1px solid rgba(199,164,75,0.18);
+      border: 1px solid rgba(154,166,160,0.16);
       background: rgba(17,24,20,0.35);
       padding: 10px 12px;
       border-radius: 14px;
       color: var(--muted);
       font-family: var(--mono);
       font-size: 12px;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
-    .pctCol{
-      font-family: var(--mono);
-      color: var(--text);
-    }
-
-    /* Phone polish */
+    /* Mobile: clean and readable */
     @media (max-width: 520px){
-      .wrap{ margin: 18px auto; padding-bottom: 28px; }
+      .wrap{ margin: 14px auto; padding-bottom: 22px; }
       h1{ font-size: 22px; }
-      input[type="text"]{ min-width: 180px; }
-      table{ min-width: 720px; }
+      th.habitCol, td.habitCol{ width: 44%; }
+      th.pctCol, td.pctCol{ width: 12%; }
+      th, td{ padding: 10px 6px; }
     }
   </style>
 </head>
@@ -191,7 +206,7 @@
       </div>
 
       <div class="row">
-        <input id="habitInput" type="text" placeholder="Add a habit (ex: Gym, Study, 8h sleep)" />
+        <input id="habitInput" type="text" placeholder="Add a habit (Gym, Study, Sleep)" />
         <button id="addBtn">Add</button>
       </div>
     </div>
@@ -204,21 +219,13 @@
             <button id="nextBtn">Next ▶</button>
 
             <select id="rangeSelect">
-              <option value="7" selected>This week</option>
+              <option value="week" selected>This week</option>
               <option value="30">Last 30 days</option>
               <option value="90">Last 90 days</option>
-              <option value="180">Last 180 days</option>
-              <option value="365">Last 365 days</option>
               <option value="all">All time</option>
             </select>
 
-            <div class="row">
-              <span class="tiny">End date:</span>
-              <input id="endDate" type="date" />
-            </div>
-
             <button id="todayBtn">Today</button>
-            <button id="clearRangeBtn">Clear Range</button>
           </div>
 
           <div class="mutedBox" id="rangeText">Loading…</div>
@@ -227,40 +234,49 @@
         <div class="tableWrap">
           <table id="habitTable">
             <thead>
-              <tr id="headRow">
-                <th>Habit</th>
-                <th>%</th>
-              </tr>
+              <tr id="headRow"></tr>
             </thead>
             <tbody></tbody>
           </table>
         </div>
+
+        <div style="height:10px"></div>
+        <div class="tiny" id="gridTip"></div>
       </div>
 
       <div class="card stats">
         <div class="pill">
           <div>
-            <div class="tiny">Overall completion (selected range)</div>
+            <div class="tiny">Range completion</div>
             <b id="pctText">0%</b>
           </div>
           <div class="tiny" id="countsText">0 / 0</div>
         </div>
 
         <div>
-          <div class="tiny" style="margin:0 0 8px;">Pie (done vs missing)</div>
-          <canvas id="pieChart" height="220"></canvas>
+          <div class="tiny" style="margin:0 0 8px;">All-time consistency</div>
+          <div class="chartBox chartFixed">
+            <canvas id="pieChart"></canvas>
+          </div>
         </div>
 
         <div>
-          <div class="tiny" style="margin:0 0 8px;">Line (daily completion %)</div>
-          <canvas id="lineChart" height="220"></canvas>
+          <div class="tiny" style="margin:0 0 8px;">Daily completion % (range)</div>
+          <div class="chartBox chartFixed">
+            <canvas id="lineChart"></canvas>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    const STORAGE_KEY = "ccc_commitment_consistency_chart_v1";
+    // --- PWA SW ---
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+    }
+
+    const STORAGE_KEY = "ccc_consistency_v2";
 
     function loadState(){
       try{
@@ -296,12 +312,13 @@
     const countsText = document.getElementById("countsText");
 
     const rangeSelect = document.getElementById("rangeSelect");
-    const endDateEl = document.getElementById("endDate");
     const prevBtn = document.getElementById("prevBtn");
     const nextBtn = document.getElementById("nextBtn");
     const todayBtn = document.getElementById("todayBtn");
-    const clearRangeBtn = document.getElementById("clearRangeBtn");
     const rangeText = document.getElementById("rangeText");
+    const gridTip = document.getElementById("gridTip");
+
+    const isMobile = window.matchMedia("(max-width: 520px)").matches;
 
     // Date helpers
     function toISODate(d){
@@ -319,33 +336,16 @@
       d.setDate(d.getDate() + n);
       return d;
     }
-    function fmtShort(iso){
-      const d = fromISODate(iso);
-      const mm = String(d.getMonth()+1).padStart(2,"0");
-      const dd = String(d.getDate()).padStart(2,"0");
-      return `${mm}/${dd}`;
-    }
     function todayISO(){ return toISODate(new Date()); }
 
-    function startOfWeekISO(endISO){
-      const d = fromISODate(endISO);
-      // Monday-based week: Mon=0 ... Sun=6
-      const day = d.getDay(); // Sun=0..Sat=6
-      const monBased = (day + 6) % 7;
-      const start = addDays(d, -monBased);
-      return toISODate(start);
-    }
-
-    function getAllDatesPresent(){
-      const set = new Set();
-      for(const h of state.habits){
-        for(const k of Object.keys(h.checks || {})){
-          set.add(k);
-        }
-      }
-      const arr = Array.from(set);
-      arr.sort();
-      return arr;
+    // Monday-start week
+    function startOfWeekMonday(date){
+      const d = new Date(date);
+      const day = d.getDay(); // Sun=0
+      const diff = (day === 0) ? -6 : (1 - day); // move to Monday
+      d.setDate(d.getDate() + diff);
+      d.setHours(0,0,0,0);
+      return d;
     }
 
     function makeDateList(startISO, endISO){
@@ -360,87 +360,67 @@
       return out;
     }
 
-    function getRange(){
-      const endISO = endDateEl.value || todayISO();
-      const end = fromISODate(endISO);
-      const rangeVal = rangeSelect.value;
+    function getAllDatesPresent(){
+      const set = new Set();
+      for(const h of state.habits){
+        for(const k of Object.keys(h.checks || {})){
+          set.add(k);
+        }
+      }
+      const arr = Array.from(set);
+      arr.sort();
+      return arr;
+    }
 
-      if(rangeVal === "7"){
-        const startISO = startOfWeekISO(endISO);
-        const endISO2 = toISODate(addDays(fromISODate(startISO), 6));
-        const dates = makeDateList(startISO, endISO2);
-        return { startISO, endISO: endISO2, dates, mode: "week" };
+    // Fixed “today” end
+    let endISO = todayISO();
+
+    function getRange(){
+      // Mobile is always week (no chaos)
+      if(isMobile){
+        rangeSelect.value = "week";
+        rangeSelect.disabled = true;
       }
 
-      if(rangeVal === "all"){
+      const end = fromISODate(endISO);
+      const v = rangeSelect.value;
+
+      if(v === "week"){
+        const start = startOfWeekMonday(end);
+        const startISO = toISODate(start);
+        const endOfWeek = addDays(start, 6);
+        const endWeekISO = toISODate(endOfWeek);
+        const dates = makeDateList(startISO, endWeekISO);
+        return { label: "This week", startISO, endISO: endWeekISO, dates, gridDates: dates, isAll:false };
+      }
+
+      if(v === "all"){
         const all = getAllDatesPresent();
         if(all.length === 0){
           const start = addDays(end, -6);
           const startISO = toISODate(start);
           const dates = makeDateList(startISO, endISO);
-          return { startISO, endISO, dates, mode: "all" };
+          return { label: "All time", startISO, endISO, dates, gridDates: dates, isAll:true };
         }
         const startISO = all[0];
         const lastISO = all[all.length-1];
-        const endISO2 = (lastISO > endISO) ? lastISO : endISO;
-
-        const fullDates = makeDateList(startISO, endISO2);
-        const dates = fullDates.slice(-31);
-        return { startISO, endISO: endISO2, dates, mode: "all" };
+        const realEnd = (lastISO > endISO) ? lastISO : endISO;
+        const dates = makeDateList(startISO, realEnd);
+        // Grid stays readable: show last 14 days on desktop, week on mobile
+        const gridDates = isMobile ? dates.slice(-7) : dates.slice(-14);
+        return { label: "All time", startISO, endISO: realEnd, dates, gridDates, isAll:true };
       }
 
-      const days = Number(rangeVal);
+      const days = Number(v);
       const start = addDays(end, -(days-1));
       const startISO = toISODate(start);
       const dates = makeDateList(startISO, endISO);
-      return { startISO, endISO, dates, mode: "range" };
+
+      // Grid cap: week on mobile, last 14 on desktop (prevents screen “growing”)
+      const gridDates = isMobile ? dates.slice(-7) : dates.slice(-14);
+
+      return { label: `Last ${days} days`, startISO, endISO, dates, gridDates, isAll:false };
     }
-
-    // Charts
-    const pieCtx = document.getElementById("pieChart").getContext("2d");
-    const lineCtx = document.getElementById("lineChart").getContext("2d");
-
-    const pieChart = new Chart(pieCtx, {
-      type: "doughnut",
-      data: {
-        labels: ["Done", "Missing"],
-        datasets: [{
-          data: [0,0],
-          backgroundColor: ["rgba(199,164,75,0.85)", "rgba(42,106,79,0.55)"],
-          borderColor: "rgba(199,164,75,0.25)",
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { labels: { color: "#e7e4d8" } } }
-      }
-    });
-
-    const lineChart = new Chart(lineCtx, {
-      type: "line",
-      data: {
-        labels: [],
-        datasets: [{
-          label: "Daily %",
-          data: [],
-          tension: 0.35,
-          borderColor: "rgba(199,164,75,0.9)",
-          backgroundColor: "rgba(199,164,75,0.15)",
-          fill: true,
-          pointRadius: 3,
-          pointBackgroundColor: "rgba(199,164,75,0.9)"
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { labels: { color: "#e7e4d8" } } },
-        scales: {
-          x: { ticks: { color: "#b9b29a" }, grid: { color: "rgba(199,164,75,0.10)" } },
-          y: { ticks: { color: "#b9b29a" }, grid: { color: "rgba(199,164,75,0.10)" }, suggestedMin: 0, suggestedMax: 100 }
-        }
-      }
-    });
 
     // Checks
     function getCheck(habit, iso){
@@ -484,14 +464,77 @@
       return { totalBoxes, done, overallPct, dailyPct, perHabit };
     }
 
-    function updateCharts(dates){
-      const { totalBoxes, done, dailyPct } = computeStatsForRange(dates);
-      const missing = Math.max(0, totalBoxes - done);
+    function computeAllTimeStats(){
+      const dates = getAllDatesPresent();
+      return computeStatsForRange(dates);
+    }
 
+    function dayLabel(iso){
+      const d = fromISODate(iso);
+      const names = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+      const dd = String(d.getDate()).padStart(2,"0");
+      const mm = String(d.getMonth()+1).padStart(2,"0");
+      return `${names[d.getDay()]} ${mm}/${dd}`;
+    }
+
+    // Charts
+    const pieCtx = document.getElementById("pieChart").getContext("2d");
+    const lineCtx = document.getElementById("lineChart").getContext("2d");
+
+    const pieChart = new Chart(pieCtx, {
+      type: "doughnut",
+      data: {
+        labels: ["Done", "Missing"],
+        datasets: [{
+          data: [0,0],
+          backgroundColor: ["rgba(154,166,160,0.85)", "rgba(42,106,79,0.55)"],
+          borderColor: "rgba(154,166,160,0.20)",
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: "#e7e4d8" } } }
+      }
+    });
+
+    const lineChart = new Chart(lineCtx, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [{
+          label: "Daily %",
+          data: [],
+          tension: 0.35,
+          borderColor: "rgba(154,166,160,0.9)",
+          backgroundColor: "rgba(154,166,160,0.12)",
+          fill: true,
+          pointRadius: 3,
+          pointBackgroundColor: "rgba(154,166,160,0.9)"
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: "#e7e4d8" } } },
+        scales: {
+          x: { ticks: { color: "#b9b29a" }, grid: { color: "rgba(154,166,160,0.08)" } },
+          y: { ticks: { color: "#b9b29a" }, grid: { color: "rgba(154,166,160,0.08)" }, suggestedMin: 0, suggestedMax: 100 }
+        }
+      }
+    });
+
+    function updateAllTimePie(){
+      const { totalBoxes, done } = computeAllTimeStats();
+      const missing = Math.max(0, totalBoxes - done);
       pieChart.data.datasets[0].data = [done, missing];
       pieChart.update();
+    }
 
-      lineChart.data.labels = dates.map(fmtShort);
+    function updateRangeLine(dates){
+      const { dailyPct } = computeStatsForRange(dates);
+      lineChart.data.labels = dates.map(d => dayLabel(d).split(" ")[0]); // Mon Tue...
       lineChart.data.datasets[0].data = dailyPct;
       lineChart.update();
     }
@@ -502,40 +545,33 @@
       countsText.textContent = `${done} / ${totalBoxes}`;
     }
 
-    // Table (Day + Date in week view)
-    function renderHeader(dates){
+    // Table
+    function renderHeader(gridDates){
       headRow.innerHTML = "";
 
       const thHabit = document.createElement("th");
+      thHabit.className = "habitCol";
       thHabit.textContent = "Habit";
       headRow.appendChild(thHabit);
 
       const thPct = document.createElement("th");
+      thPct.className = "pctCol";
       thPct.textContent = "%";
       headRow.appendChild(thPct);
 
-      const isWeekView = dates.length <= 7;
-
-      for(const iso of dates){
+      for(const iso of gridDates){
         const th = document.createElement("th");
-
-        if(isWeekView){
-          const d = fromISODate(iso);
-          const day = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()];
-          th.textContent = `${day} ${fmtShort(iso)}`; // Mon 01/19
-        } else {
-          th.textContent = fmtShort(iso); // 01/19
-        }
-
+        th.textContent = dayLabel(iso);
         headRow.appendChild(th);
       }
     }
 
-    function buildRow(habitIndex, dates, habitPct){
+    function buildRow(habitIndex, gridDates, habitPct){
       const h = state.habits[habitIndex];
       const tr = document.createElement("tr");
 
       const nameTd = document.createElement("td");
+      nameTd.className = "habitCol";
       const wrap = document.createElement("div");
       wrap.className = "habitCell";
 
@@ -561,7 +597,7 @@
       pctTd.textContent = `${habitPct}%`;
       tr.appendChild(pctTd);
 
-      for(const iso of dates){
+      for(const iso of gridDates){
         const td = document.createElement("td");
         const chk = document.createElement("input");
         chk.type = "checkbox";
@@ -571,6 +607,8 @@
         chk.addEventListener("change", () => {
           setCheck(state.habits[habitIndex], iso, chk.checked);
           saveState();
+          // IMPORTANT: pie is all-time, so updating it here is fine
+          updateAllTimePie();
           render();
         });
 
@@ -581,32 +619,35 @@
       return tr;
     }
 
-    function renderTable(dates){
+    function renderTable(rangeDates, gridDates){
       tableBody.innerHTML = "";
-      const stats = computeStatsForRange(dates);
+      const stats = computeStatsForRange(rangeDates);
 
       state.habits.forEach((_, idx) => {
         const pct = stats.perHabit[idx] ? stats.perHabit[idx].pct : 0;
-        tableBody.appendChild(buildRow(idx, dates, pct));
+        tableBody.appendChild(buildRow(idx, gridDates, pct));
       });
     }
 
     function render(){
-      const { startISO, endISO, dates, mode } = getRange();
+      const r = getRange();
 
-      // simple, not repeating
-      if(mode === "week"){
-        rangeText.textContent = `Week: ${startISO} → ${endISO}`;
-      } else if(mode === "all"){
-        rangeText.textContent = `All time: ${startISO} → ${endISO}`;
+      // Display text (simple, not messy)
+      rangeText.textContent = `${r.label} • Week starts Monday • Today: ${todayISO()}`;
+
+      // Tip: explain grid caps (without being annoying)
+      if(r.gridDates.length < r.dates.length){
+        gridTip.textContent = `Grid shows last ${r.gridDates.length} days (stats use full range).`;
       } else {
-        rangeText.textContent = `Range: ${startISO} → ${endISO}`;
+        gridTip.textContent = "";
       }
 
-      renderHeader(dates);
-      renderTable(dates);
-      updateHeaderStats(dates);
-      updateCharts(dates);
+      renderHeader(r.gridDates);
+      renderTable(r.dates, r.gridDates);
+
+      updateHeaderStats(r.dates);
+      updateRangeLine(r.gridDates);   // line uses visible grid
+      updateAllTimePie();             // pie is ALWAYS all-time
     }
 
     // Actions
@@ -625,54 +666,46 @@
       habitInput.value = "";
       habitInput.focus();
       saveState();
+      updateAllTimePie();
       render();
     }
 
-    function shiftRange(days){
-      const cur = endDateEl.value || todayISO();
-      const next = toISODate(addDays(fromISODate(cur), days));
-      endDateEl.value = next;
+    function shiftRange(step){
+      const end = fromISODate(endISO);
+      const moved = addDays(end, step);
+      endISO = toISODate(moved);
       render();
     }
 
-    function clearRange(){
-      const { dates } = getRange();
-      for(const h of state.habits){
-        for(const iso of dates){
-          setCheck(h, iso, false);
-        }
-      }
-      saveState();
-      render();
-    }
-
-    // Events
     addBtn.addEventListener("click", addHabit);
     habitInput.addEventListener("keydown", (e) => { if(e.key === "Enter") addHabit(); });
 
     rangeSelect.addEventListener("change", render);
-    endDateEl.addEventListener("change", render);
 
     prevBtn.addEventListener("click", () => {
       const v = rangeSelect.value;
-      const n = (v === "all") ? 31 : (v === "7" ? 7 : Number(v));
-      shiftRange(-n);
+      if(v === "week") shiftRange(-7);
+      else if(v === "all") shiftRange(-14);
+      else shiftRange(-Number(v));
     });
+
     nextBtn.addEventListener("click", () => {
       const v = rangeSelect.value;
-      const n = (v === "all") ? 31 : (v === "7" ? 7 : Number(v));
-      shiftRange(n);
+      if(v === "week") shiftRange(7);
+      else if(v === "all") shiftRange(14);
+      else shiftRange(Number(v));
     });
 
     todayBtn.addEventListener("click", () => {
-      endDateEl.value = todayISO();
+      endISO = todayISO();
       render();
     });
 
-    clearRangeBtn.addEventListener("click", clearRange);
-
     // Init
-    endDateEl.value = endDateEl.value || todayISO();
+    if(isMobile){
+      rangeSelect.value = "week";
+      rangeSelect.disabled = true;
+    }
     render();
   </script>
 </body>
