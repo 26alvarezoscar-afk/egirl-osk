@@ -44,10 +44,10 @@
       color: var(--text);
     }
 
-    .wrap{ max-width: 1200px; margin: 28px auto; padding: 0 16px 40px; }
+    .wrap{ max-width: 1200px; margin: 22px auto; padding: 0 14px 34px; }
 
     .top{
-      display:flex; gap:16px; align-items:flex-end; justify-content:space-between; flex-wrap: wrap;
+      display:flex; gap:14px; align-items:flex-end; justify-content:space-between; flex-wrap: wrap;
       margin-bottom: 12px;
     }
 
@@ -59,10 +59,10 @@
       border: 1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: 16px;
+      padding: 14px;
     }
 
-    .grid{ display:grid; grid-template-columns: 1.25fr 0.75fr; gap: 16px; }
+    .grid{ display:grid; grid-template-columns: 1.25fr 0.75fr; gap: 14px; }
     @media (max-width: 900px){ .grid{ grid-template-columns: 1fr; } }
 
     .row{ display:flex; gap:10px; flex-wrap: wrap; align-items:center; }
@@ -75,7 +75,7 @@
       padding: 10px 12px;
       outline: none;
     }
-    input[type="text"]{ min-width: 240px; flex: 1; }
+    input[type="text"]{ min-width: 220px; flex: 1; }
 
     button{
       background: linear-gradient(180deg, rgba(199,164,75,0.22), rgba(199,164,75,0.10));
@@ -90,8 +90,9 @@
 
     .tiny{ color: var(--muted); font-size: 12px; }
 
+    /* TABLE (desktop) */
     .tableWrap{
-      overflow:auto;
+      overflow: hidden; /* no side-scroll */
       border-radius: 12px;
       border: 1px solid var(--line);
     }
@@ -99,16 +100,18 @@
     table{
       width:100%;
       border-collapse: collapse;
-      min-width: 860px;
       background: rgba(15,21,18,0.55);
+      table-layout: fixed; /* helps fit screen */
     }
 
     th, td{
-      padding: 10px 12px;
+      padding: 10px 10px;
       border-bottom: 1px solid rgba(199,164,75,0.12);
       text-align: left;
       white-space: nowrap;
       vertical-align: middle;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     th{
@@ -121,7 +124,7 @@
       z-index: 2;
     }
 
-    .habitCell{ display:flex; gap:10px; align-items:center; justify-content:space-between; min-width: 260px; }
+    .habitCell{ display:flex; gap:10px; align-items:center; justify-content:space-between; }
     .remove{
       background: transparent;
       border: 1px solid rgba(199,164,75,0.25);
@@ -129,6 +132,7 @@
       padding: 6px 10px;
       border-radius: 10px;
       font-weight: 650;
+      flex: 0 0 auto;
     }
     .remove:hover{ color: var(--text); border-color: rgba(199,164,75,0.55); }
 
@@ -154,7 +158,7 @@
 
     .controls{
       display:flex; gap:10px; flex-wrap: wrap; align-items:center; justify-content:space-between;
-      margin: 10px 0 14px;
+      margin: 8px 0 12px;
     }
 
     .mutedBox{
@@ -172,11 +176,26 @@
       color: var(--text);
     }
 
-    @media (max-width: 520px){
-      .wrap{ margin: 18px auto; padding-bottom: 28px; }
+    /* PHONE: force “This Week” view (7 days only) so NO sideways scrolling */
+    @media (max-width: 560px){
+      .wrap{ margin: 16px auto; padding-bottom: 26px; }
       h1{ font-size: 22px; }
-      input[type="text"]{ min-width: 180px; }
-      table{ min-width: 720px; }
+      input[type="text"]{ min-width: 160px; }
+      .card{ padding: 12px; }
+
+      /* make checkbox cells compact */
+      th, td{ padding: 8px 8px; }
+      .chk{ width: 18px; height: 18px; }
+
+      /* keep first columns readable */
+      th:nth-child(1), td:nth-child(1){ width: 44%; }
+      th:nth-child(2), td:nth-child(2){ width: 10%; text-align: right; }
+
+      /* day columns share remaining space */
+      th:nth-child(n+3), td:nth-child(n+3){ text-align: center; }
+
+      .remove{ padding: 5px 8px; }
+      .sub{ font-size: 11px; }
     }
   </style>
 </head>
@@ -186,7 +205,7 @@
     <div class="top">
       <div>
         <h1>E-Girl OSK Consistency Chart</h1>
-        <div class="sub">Forever timeline • per-habit % • old money theme</div>
+        <div class="sub">Minimal • no sideways scrolling • week view on mobile</div>
       </div>
 
       <div class="row">
@@ -199,25 +218,21 @@
       <div class="card">
         <div class="controls">
           <div class="row">
-            <button id="prevBtn">◀ Prev</button>
-            <button id="nextBtn">Next ▶</button>
+            <button id="prevBtn">◀</button>
+            <button id="nextBtn">▶</button>
 
             <select id="rangeSelect">
+              <option value="week" selected>This week (Mon–Sun)</option>
               <option value="7">Last 7 days</option>
               <option value="30">Last 30 days</option>
-              <option value="90" selected>Last 90 days</option>
+              <option value="90">Last 90 days</option>
               <option value="180">Last 180 days</option>
               <option value="365">Last 365 days</option>
               <option value="all">All time</option>
             </select>
 
-            <div class="row">
-              <span class="tiny">End date:</span>
-              <input id="endDate" type="date" />
-            </div>
-
             <button id="todayBtn">Today</button>
-            <button id="clearRangeBtn">Clear Range</button>
+            <button id="clearRangeBtn">Clear</button>
           </div>
 
           <div class="mutedBox" id="rangeText">Loading…</div>
@@ -236,7 +251,10 @@
         </div>
 
         <div style="height:10px"></div>
-        <div class="tiny">Tip: “All time” shows overall stats and the last 31 days in the table (so it stays usable).</div>
+        <div class="tiny">
+          On phones, checkboxes always show the current week (Mon–Sun) so it fits perfectly.
+          The range selector still changes your % + charts.
+        </div>
       </div>
 
       <div class="card stats">
@@ -262,7 +280,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "egirl_osk_consistency_chart_v1";
+    const STORAGE_KEY = "egirl_osk_consistency_chart_v2";
 
     function loadState(){
       try{
@@ -298,7 +316,6 @@
     const countsText = document.getElementById("countsText");
 
     const rangeSelect = document.getElementById("rangeSelect");
-    const endDateEl = document.getElementById("endDate");
     const prevBtn = document.getElementById("prevBtn");
     const nextBtn = document.getElementById("nextBtn");
     const todayBtn = document.getElementById("todayBtn");
@@ -329,18 +346,6 @@
     }
     function todayISO(){ return toISODate(new Date()); }
 
-    function getAllDatesPresent(){
-      const set = new Set();
-      for(const h of state.habits){
-        for(const k of Object.keys(h.checks || {})){
-          set.add(k);
-        }
-      }
-      const arr = Array.from(set);
-      arr.sort();
-      return arr;
-    }
-
     function makeDateList(startISO, endISO){
       const start = fromISODate(startISO);
       const end = fromISODate(endISO);
@@ -353,31 +358,73 @@
       return out;
     }
 
-    function getRange(){
-      const endISO = endDateEl.value || todayISO();
-      const end = fromISODate(endISO);
+    // Monday-start week (Mon -> Sun)
+    function getWeekStartMonday(iso){
+      const d = fromISODate(iso);
+      const day = d.getDay(); // 0=Sun,1=Mon,...6=Sat
+      const diffToMon = (day === 0) ? -6 : (1 - day);
+      const mon = addDays(d, diffToMon);
+      return toISODate(mon);
+    }
 
-      const rangeVal = rangeSelect.value;
+    function getWeekDates(iso){
+      const startISO = getWeekStartMonday(iso);
+      const start = fromISODate(startISO);
+      const endISO = toISODate(addDays(start, 6)); // Sun
+      return { startISO, endISO, dates: makeDateList(startISO, endISO) };
+    }
 
-      if(rangeVal === "all"){
-        const all = getAllDatesPresent();
-        if(all.length === 0){
-          const start = addDays(end, -6);
-          return { startISO: toISODate(start), endISO, dates: makeDateList(toISODate(start), endISO), isAll: true };
+    function getAllDatesPresent(){
+      const set = new Set();
+      for(const h of state.habits){
+        for(const k of Object.keys(h.checks || {})){
+          set.add(k);
         }
-        const startISO = all[0];
-        const endISO2 = (all[all.length-1] > endISO) ? all[all.length-1] : endISO;
+      }
+      const arr = Array.from(set);
+      arr.sort();
+      return arr;
+    }
 
-        const fullDates = makeDateList(startISO, endISO2);
-        const dates = fullDates.slice(-31);
-        return { startISO, endISO: endISO2, dates, isAll: true };
+    // Selected range for STATS/CHARTS (can be long)
+    let anchorISO = todayISO(); // used for prev/next + “today” alignment
+
+    function getSelectedRange(){
+      const v = rangeSelect.value;
+
+      if(v === "week"){
+        const w = getWeekDates(anchorISO);
+        return { ...w, isAll:false, label:`This week: ${w.startISO} → ${w.endISO}` };
       }
 
-      const days = Number(rangeVal);
-      const start = addDays(end, -(days-1));
-      const startISO = toISODate(start);
+      if(v === "all"){
+        const all = getAllDatesPresent();
+        if(all.length === 0){
+          const w = getWeekDates(anchorISO);
+          return { ...w, isAll:true, label:`All time: (no data yet) showing week ${w.startISO} → ${w.endISO}` };
+        }
+        const startISO = all[0];
+        const endISO = (all[all.length-1] > anchorISO) ? all[all.length-1] : anchorISO;
+        const dates = makeDateList(startISO, endISO);
+        return { startISO, endISO, dates, isAll:true, label:`All time: ${startISO} → ${endISO}` };
+      }
+
+      const days = Number(v);
+      const endISO = anchorISO;
+      const startISO = toISODate(addDays(fromISODate(endISO), -(days-1)));
       const dates = makeDateList(startISO, endISO);
-      return { startISO, endISO, dates, isAll: false };
+      return { startISO, endISO, dates, isAll:false, label:`Range: ${startISO} → ${endISO} (${days} days)` };
+    }
+
+    // Display range for CHECKBOX GRID (always week on small screens)
+    function isPhone(){
+      return window.matchMedia("(max-width: 560px)").matches;
+    }
+
+    function getDisplayDates(){
+      // Always show “this week” in the grid so it fits the screen.
+      const w = getWeekDates(anchorISO);
+      return { ...w, label:`Week view: ${w.startISO} → ${w.endISO}` };
     }
 
     // Charts
@@ -426,6 +473,7 @@
       }
     });
 
+    // Checks
     function getCheck(habit, iso){
       return !!(habit.checks && habit.checks[iso]);
     }
@@ -467,26 +515,28 @@
       return { totalBoxes, done, overallPct, dailyPct, perHabit };
     }
 
-    function updateCharts(dates){
-      const { totalBoxes, done, dailyPct } = computeStatsForRange(dates);
+    function updateCharts(selectedDates){
+      const { totalBoxes, done, dailyPct } = computeStatsForRange(selectedDates);
       const missing = Math.max(0, totalBoxes - done);
 
       pieChart.data.datasets[0].data = [done, missing];
       pieChart.update();
 
-      lineChart.data.labels = dates.map(fmtShort);
+      lineChart.data.labels = selectedDates.map(fmtShort);
       lineChart.data.datasets[0].data = dailyPct;
       lineChart.update();
     }
 
-    function updateHeaderStats(dates){
-      const { totalBoxes, done, overallPct } = computeStatsForRange(dates);
+    function updateHeaderStats(selectedDates){
+      const { totalBoxes, done, overallPct } = computeStatsForRange(selectedDates);
       pctText.textContent = `${overallPct}%`;
       countsText.textContent = `${done} / ${totalBoxes}`;
     }
 
-    function renderHeader(dates){
+    // Table
+    function renderHeader(displayDates){
       headRow.innerHTML = "";
+
       const thHabit = document.createElement("th");
       thHabit.textContent = "Habit";
       headRow.appendChild(thHabit);
@@ -495,14 +545,16 @@
       thPct.textContent = "%";
       headRow.appendChild(thPct);
 
-      for(const iso of dates){
+      // Show weekday labels (Mon..Sun) so it matches what you asked for
+      const labels = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+      for(let i = 0; i < displayDates.length; i++){
         const th = document.createElement("th");
-        th.textContent = fmtShort(iso);
+        th.textContent = labels[i];
         headRow.appendChild(th);
       }
     }
 
-    function buildRow(habitIndex, dates, habitPct){
+    function buildRow(habitIndex, displayDates, habitPct){
       const h = state.habits[habitIndex];
       const tr = document.createElement("tr");
 
@@ -532,7 +584,7 @@
       pctTd.textContent = `${habitPct}%`;
       tr.appendChild(pctTd);
 
-      for(const iso of dates){
+      for(const iso of displayDates){
         const td = document.createElement("td");
         const chk = document.createElement("input");
         chk.type = "checkbox";
@@ -552,29 +604,33 @@
       return tr;
     }
 
-    function renderTable(dates){
+    function renderTable(displayDates, perHabitPctFromSelectedRange){
       tableBody.innerHTML = "";
-      const stats = computeStatsForRange(dates);
 
       state.habits.forEach((_, idx) => {
-        const pct = stats.perHabit[idx] ? stats.perHabit[idx].pct : 0;
-        tableBody.appendChild(buildRow(idx, dates, pct));
+        const pct = perHabitPctFromSelectedRange[idx] ? perHabitPctFromSelectedRange[idx].pct : 0;
+        tableBody.appendChild(buildRow(idx, displayDates, pct));
       });
     }
 
     function render(){
-      const { startISO, endISO, dates, isAll } = getRange();
+      // RANGE for percent + charts
+      const selected = getSelectedRange();
+      const selectedStats = computeStatsForRange(selected.dates);
 
-      rangeText.textContent = isAll
-        ? `All time: ${startISO} → ${endISO} (table shows last ${dates.length} days)`
-        : `Range: ${startISO} → ${endISO} (${dates.length} days)`;
+      // DISPLAY for checkbox grid (always Mon–Sun week view)
+      const display = getDisplayDates();
 
-      renderHeader(dates);
-      renderTable(dates);
-      updateHeaderStats(dates);
-      updateCharts(dates);
+      // top text
+      rangeText.textContent = `${selected.label} • Grid shows ${display.label}`;
+
+      renderHeader(display.dates);
+      renderTable(display.dates, selectedStats.perHabit);
+      updateHeaderStats(selected.dates);
+      updateCharts(selected.dates);
     }
 
+    // Actions
     function addHabit(){
       const name = habitInput.value.trim();
       if(!name) return;
@@ -593,17 +649,15 @@
       render();
     }
 
-    function shiftRange(days){
-      const cur = endDateEl.value || todayISO();
-      const next = toISODate(addDays(fromISODate(cur), days));
-      endDateEl.value = next;
+    function shiftAnchor(days){
+      anchorISO = toISODate(addDays(fromISODate(anchorISO), days));
       render();
     }
 
-    function clearRange(){
-      const { dates } = getRange();
+    function clearSelectedRange(){
+      const selected = getSelectedRange();
       for(const h of state.habits){
-        for(const iso of dates){
+        for(const iso of selected.dates){
           setCheck(h, iso, false);
         }
       }
@@ -611,31 +665,39 @@
       render();
     }
 
+    // Events
     addBtn.addEventListener("click", addHabit);
     habitInput.addEventListener("keydown", (e) => { if(e.key === "Enter") addHabit(); });
 
     rangeSelect.addEventListener("change", render);
-    endDateEl.addEventListener("change", render);
 
     prevBtn.addEventListener("click", () => {
       const v = rangeSelect.value;
-      const n = (v === "all") ? 31 : Number(v);
-      shiftRange(-n);
+      if(v === "week") return shiftAnchor(-7);
+      if(v === "all") return shiftAnchor(-31);
+      return shiftAnchor(-Number(v));
     });
+
     nextBtn.addEventListener("click", () => {
       const v = rangeSelect.value;
-      const n = (v === "all") ? 31 : Number(v);
-      shiftRange(n);
+      if(v === "week") return shiftAnchor(7);
+      if(v === "all") return shiftAnchor(31);
+      return shiftAnchor(Number(v));
     });
 
     todayBtn.addEventListener("click", () => {
-      endDateEl.value = todayISO();
+      anchorISO = todayISO();
       render();
     });
 
-    clearRangeBtn.addEventListener("click", clearRange);
+    clearRangeBtn.addEventListener("click", clearSelectedRange);
 
-    endDateEl.value = endDateEl.value || todayISO();
+    // Re-render when screen rotates / resizes
+    window.addEventListener("resize", () => render());
+
+    // Init (today, and week view by default)
+    anchorISO = todayISO();
+    rangeSelect.value = "week";
     render();
   </script>
 </body>
