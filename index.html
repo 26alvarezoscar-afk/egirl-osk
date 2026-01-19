@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <title>E-Girl OSK — Consistency Chart</title>
 
   <!-- PWA -->
@@ -15,16 +14,6 @@
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
 
   <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <style>
-    /* keep ALL your existing CSS here */
-  </style>
-</head>
-
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>E-Girl OSK — Consistency Chart</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
@@ -183,7 +172,6 @@
       color: var(--text);
     }
 
-    /* Phone polish */
     @media (max-width: 520px){
       .wrap{ margin: 18px auto; padding-bottom: 28px; }
       h1{ font-size: 22px; }
@@ -381,7 +369,7 @@
         const endISO2 = (all[all.length-1] > endISO) ? all[all.length-1] : endISO;
 
         const fullDates = makeDateList(startISO, endISO2);
-        const dates = fullDates.slice(-31); // keep table usable
+        const dates = fullDates.slice(-31);
         return { startISO, endISO: endISO2, dates, isAll: true };
       }
 
@@ -438,7 +426,6 @@
       }
     });
 
-    // Checks
     function getCheck(habit, iso){
       return !!(habit.checks && habit.checks[iso]);
     }
@@ -498,7 +485,6 @@
       countsText.textContent = `${done} / ${totalBoxes}`;
     }
 
-    // Table
     function renderHeader(dates){
       headRow.innerHTML = "";
       const thHabit = document.createElement("th");
@@ -589,7 +575,6 @@
       updateCharts(dates);
     }
 
-    // Actions
     function addHabit(){
       const name = habitInput.value.trim();
       if(!name) return;
@@ -626,7 +611,6 @@
       render();
     }
 
-    // Events
     addBtn.addEventListener("click", addHabit);
     habitInput.addEventListener("keydown", (e) => { if(e.key === "Enter") addHabit(); });
 
@@ -651,10 +635,8 @@
 
     clearRangeBtn.addEventListener("click", clearRange);
 
-    // Init
     endDateEl.value = endDateEl.value || todayISO();
     render();
   </script>
 </body>
 </html>
-
